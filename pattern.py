@@ -4,12 +4,20 @@ import pyautogui
 from pynput.mouse import Listener
 from sklearn.cluster import DBSCAN
 import numpy as np
-
+import pickle
 
 class MouseMovementPattern:
     def __init__(self, click_delay_record) -> None:
         self.click_delay_record = click_delay_record
         self.positions = []
+    
+    def save_positions(self, file_name):
+        with open(f"{file_name}.pkl", "wb") as f:
+            pickle.dump(self.positions, f)
+    
+    def load_positions(self, file_name):
+        with open(f"{file_name}.pkl", "rb") as f:
+            self.positions = pickle.load(f)
 
 
 class RandomClicker(MouseMovementPattern):
@@ -39,8 +47,11 @@ class ForwardClicker(MouseMovementPattern):
             if pressed:
                 current_time = time.time()
                 time_difference = current_time - self.last_click_time
-
-                self.positions.append((x, y, time_difference))
+                
+                if len(self.positions) == 0:
+                    self.positions.append((x, y, 0))
+                else:
+                    self.positions.append((x, y, time_difference))
                 self.last_click_time = current_time
         
         
@@ -49,7 +60,9 @@ class ForwardClicker(MouseMovementPattern):
             while time.time() - start_time < clicking_time:
                 pass
     
-    def play_clicks(self, clicking_time):
+    
+
+    def play_clicks(self):
         for i in range(len(self.positions)):
             pyautogui.click(self.positions[i][0], self.positions[i][1])
             
